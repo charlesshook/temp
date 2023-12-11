@@ -1,0 +1,169 @@
+---
+title: "NYPD Shooting Incidents Report"
+author: "Charles Shook"
+date: "2023-12-03"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### What I want to determine
+I want to determine if age and sex is a good indicator to determine whether a shooting incident is fatal or not.
+
+
+### Data set
+This data set covers the historical shooting incident data. This covers every shooting that occurred in NYC back from 2006 to the previous calendar year.
+
+```{r library_imports, message=FALSE}
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r imports, message=FALSE}
+url_in <- "https://data.cityofnewyork.us/api/views/833y-fsy8/rows.csv"
+
+city_data <- read_csv(url_in)
+
+city_data
+```
+
+```{r clean_up, message=FALSE}
+city_data <- city_data %>% select(-c(
+  Latitude,
+  Longitude,
+  Lon_Lat,
+  X_COORD_CD,
+  Y_COORD_CD,
+  INCIDENT_KEY,
+  OCCUR_TIME,
+  OCCUR_DATE,
+  PRECINCT,
+  JURISDICTION_CODE,
+  LOCATION_DESC,
+  LOC_CLASSFCTN_DESC,
+  LOC_OF_OCCUR_DESC,
+  VIC_RACE,
+  PERP_RACE,
+  BORO
+))
+
+city_data
+
+city_data <- city_data %>% drop_na()
+
+city_data
+```
+
+```{r display, message=FALSE}
+table(
+  city_data$PERP_SEX,
+  city_data$VIC_SEX,
+  city_data$STATISTICAL_MURDER_FLAG
+  )
+
+table(
+  city_data$PERP_SEX,
+  city_data$PERP_AGE_GROUP,
+  city_data$STATISTICAL_MURDER_FLAG
+)
+
+table(
+  city_data$VIC_SEX,
+  city_data$VIC_AGE_GROUP,
+  city_data$STATISTICAL_MURDER_FLAG
+)
+
+city_data %>%
+  filter(STATISTICAL_MURDER_FLAG == TRUE) %>%
+  ggplot(aes(x = PERP_AGE_GROUP)) +
+  geom_bar(fill = "orange")+
+  theme_bw()+
+  labs(x = "Perp Age Group",
+       y = "Fatal Shootings",
+       title = "Fatal Shootings by Perp Age Group")
+
+city_data %>%
+  filter(STATISTICAL_MURDER_FLAG == TRUE) %>%
+  ggplot(aes(x = VIC_AGE_GROUP)) +
+  geom_bar(fill = "orange")+
+  theme_bw()+
+  labs(x = "Vic Age Group",
+       y = "Fatal Shootings",
+       title = "Fatal Shootings by Vic Age Group")
+
+city_data %>%
+  filter(STATISTICAL_MURDER_FLAG == TRUE) %>%
+  ggplot(aes(x = PERP_SEX)) +
+  geom_bar(fill = "orange")+
+  theme_bw()+
+  labs(x = "Perp Sex",
+       y = "Fatal Shootings",
+       title = "Fatal Shootings by Perp Sex")
+
+city_data %>%
+  filter(STATISTICAL_MURDER_FLAG == TRUE) %>%
+  ggplot(aes(x = VIC_SEX)) +
+  geom_bar(fill = "orange")+
+  theme_bw()+
+  labs(x = "Vic Sex",
+       y = "Fatal Shootings",
+       title = "Fatal Shootings by Vic Sex")
+
+city_data %>%
+  filter(STATISTICAL_MURDER_FLAG == FALSE) %>%
+  ggplot(aes(x = PERP_AGE_GROUP)) +
+  geom_bar(fill = "orange")+
+  theme_bw()+
+  labs(x = "Perp Age Group",
+       y = "Non Fatal Shootings",
+       title = "Non Fatal Shootings by Perp Age Group")
+
+city_data %>%
+  filter(STATISTICAL_MURDER_FLAG == FALSE) %>%
+  ggplot(aes(x = VIC_AGE_GROUP)) +
+  geom_bar(fill = "orange")+
+  theme_bw()+
+  labs(x = "Vic Age Group",
+       y = "Non Fatal Shootings",
+       title = "Non Fatal Shootings by Vic Age Group")
+
+city_data %>%
+  filter(STATISTICAL_MURDER_FLAG == FALSE) %>%
+  ggplot(aes(x = PERP_SEX)) +
+  geom_bar(fill = "orange")+
+  theme_bw()+
+  labs(x = "Perp Sex",
+       y = "Non Fatal Shootings",
+       title = "Non Fatal Shootings by Perp Sex")
+
+city_data %>%
+  filter(STATISTICAL_MURDER_FLAG == FALSE) %>%
+  ggplot(aes(x = VIC_SEX)) +
+  geom_bar(fill = "orange")+
+  theme_bw()+
+  labs(x = "Vic Sex",
+       y = "Non Fatal Shootings",
+       title = "Non Fatal Shootings by Vic Sex")
+```
+
+The majority of victims are 18-44 are males. It also appears that the majority of the perpetrators are 18-44 and males as well.
+
+```{r analysis, message=FALSE}
+analysis_data <- glm(STATISTICAL_MURDER_FLAG ~ VIC_AGE_GROUP + VIC_SEX, data = city_data, family = 'binomial')
+
+analysis_data
+
+analysis_data <- glm(STATISTICAL_MURDER_FLAG ~ PERP_AGE_GROUP + PERP_SEX, data = city_data, family = 'binomial')
+
+analysis_data
+```
+
+After looking at the data, it does not appear that age and sex is a good indicator of a shooting being fatal. Both fatal and non fatal shootings appear to happen be the same age groups and the same sexs.
+
+### Bias
+I tried to limit my bias by not coming to any conclusions before doing my analysis.I also made sure to look at the data using different methods to try and limit any bias that may present itself.
+
